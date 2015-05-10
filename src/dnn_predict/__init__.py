@@ -36,7 +36,8 @@ class Predictor(object):
 		self.batch_shape.extend(self.input_shape)
 
 	def get_score(self,feats):
-		assert(self.batch_shape==list(feats.shape)),"Feats are not in proper shape"
+		assert(self.batch_shape==list(feats.shape)),("Feats are not in proper shape: "+
+			"Expected {0}, got {0}".format(self.batch_shape,str(list(feats.shape))))
 		return self.scoreFn(feats);
 	
 	def __load_model__(self,model_file,num_pretrained_layers):

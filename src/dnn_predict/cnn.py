@@ -22,7 +22,7 @@ class CNNPredictor(Predictor):
 				input_dropout_factor=conv_config['input_dropout_factor'])
 		else:
 			self.model = CNN(self.numpy_rng,self.theano_rng,conv_layer_configs = conv_layer_config,
-				batch_size = batch_size, n_outs=self.model_config['n_outs'],
+				batch_size = self.batch_size, n_outs=self.model_config['n_outs'],
 				hidden_layer_configs=mlp_config,  hidden_activation = activationFn,
 				use_fast = conv_config['use_fast'],l1_reg = mlp_config['l1_reg'],
 				l2_reg = mlp_config['l1_reg'],max_col_norm = mlp_config['max_col_norm'])

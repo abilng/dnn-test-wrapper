@@ -13,7 +13,7 @@ def load_labels(fileName):
 			labels[idx] = line[:-1];
 			idx += 1;
 		labels[-1] = "None"
-	print labels
+	#print labels
 	return labels;
 	
 def __draw_str__(dst, (x, y), s, fontsize = 0.6, color=[255, 255, 255]):
@@ -29,11 +29,7 @@ class VideoTask(object):
 		shape = vidwriter.shape
 		for idx in range(len(self.frameBlock)):
 			frame = designFrameBaner(self.frameBlock[idx],self.scores[idx],self.labels[idx]);
-			cv2.imshow('video', frame)
-			ch = 0xFF & cv2.waitKey(1000/(fps+1))
-			if ch == ord('q') or ch == 27:
-				break
-			#vidwriter.write(np.uint8(frame));
+			vidwriter.write(np.uint8(frame));
 	
 class VideoProcessor(object):
 	def __init__(self,modelFile,labelListFile,fileName,width,height,scale=1,banerWidth=50,fps=20):
@@ -58,7 +54,7 @@ class VideoProcessor(object):
 		_indices = np.argsort(_score)[::-1];
 		col = 5; row = 10; steps = int(((self.height-30)/(top+1))-5);
 		for classLbl in _indices[:top]:
-			print classLbl
+			#print classLbl
 			_str = "{0}".format(self.labels[classLbl]);
 			__draw_str__(baner_frame,(col,row),_str,color=self.colors[classLbl]); row += steps
 		#if not _labels is None:
@@ -70,7 +66,7 @@ class VideoProcessor(object):
 		else:	
 			cv2.circle(baner_frame,(int(self.banerWidth/2),int(self.height-10)),8,(0,255,0),-1);
 			
-		print baner_frame.shape,frame.shape
+		#print baner_frame.shape,frame.shape
 		return np.hstack((baner_frame,frame));
 	
 	def __videoWriter__(self):		
@@ -82,20 +78,21 @@ class VideoProcessor(object):
 		
 	def process(self):
 		blockReader = BlockReader(self.predictor.batch_size,self.predictor.input_shape,self.__readNextFrame__);
-		#pool = ThreadPool(processes = 2);
-		#task = pool.apply_async(self.__videoWriter__);
+		pool = ThreadPool(processes = 2);
+		task = pool.apply_async(self.__videoWriter__);
 		p_frames_cnt = 0
 		while not blockReader.isFinished:
 			(frameCnt,frames,labels)=blockReader.readNextBlock();
 			if frameCnt > 0:
 				processed_frames = self.__process_block__(frames);
 				scores = self.predictor.get_score(processed_frames);
+
 				vidTask = VideoTask(frames[:frameCnt],scores[:frameCnt],labels[:frameCnt])
-				vidTask.process(self.vidWriter,self.__design_frame_banner__)
-				#self.tasks.append(vidTask);
+				#vidTask.process(self.vidWriter,self.__design_frame_banner__)
+				self.tasks.append(vidTask);
 		self.isFinished = True;	
-		#while not task.ready():
-		#	sleep(1);
+		while not task.ready():
+			sleep(1);
 			
 	def __process_block__(self):
 		raise NotImplementedError;

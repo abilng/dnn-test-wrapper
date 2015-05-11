@@ -31,7 +31,7 @@ def getMSR2GroundTruth(GroundTruthFile):
 				labels[video].append(seg);
 	return labels;
 
-def getLabels(File,GroundTruthFile,framecount):
+def getLabels(File,GroundTruthFile,framecount,nolabel=3):
 	filename=os.path.basename(File).strip('".avi');
 	labels = getMSR2GroundTruth(GroundTruthFile);
 	labels = labels[filename]
@@ -41,7 +41,7 @@ def getLabels(File,GroundTruthFile,framecount):
 		for i in xrange(label['start'],(label['length']+label['start'])):
 			lbls[i].append(action);
 	
-	lbls=[list([-1]) if len(labellist) == 0 else labellist for labellist in lbls]
+	lbls=[list([nolabel]) if len(labellist) == 0 else labellist for labellist in lbls]
 	return lbls
 
 
@@ -81,7 +81,6 @@ class MSRProcessor(VideoProcessor):
 			if not ret:
 				self.frameIdx = self.N;
 				return (None,-1);
-			frame = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY )
 			self.frameIdx += 1;
 			return frame, self.lbls[self.frameIdx];
 		else:
@@ -93,6 +92,7 @@ class MSRProcessor(VideoProcessor):
 		for frame in frames:
 			if(frame.dtype == np.dtype('uint8')):
 				gray = cv2.resize(frame,None, fx=self.scale, fy=self.scale, interpolation = cv2.INTER_LINEAR)
+				gray = cv2.cvtColor( gray, cv2.COLOR_RGB2GRAY )
 				#gray = cv2.cvtColor( frame, cv2.COLOR_RGB2GRAY )
 				#gray = np.uint8(gray)
 				edges = cv2.Canny(gray,100,300)
@@ -106,11 +106,12 @@ class MSRProcessor(VideoProcessor):
 				self.prevframe = gray;
 				outframe=np.dstack((gray,edges,difframe))
 
-				#print outframe.shape
-				#gray = np.swapaxes(gray,0,1);
+				outframe = np.swapaxes(outframe,0,2);
+				outframe = np.swapaxes(outframe,1,2);
 			else:
 				outframe = frame
-			outframe = outframe.reshape((3,self.numRows,self.numCols))
+			#print outframe.shape,(3,self.numRows,self.numCols)
+			#outframe = outframe.reshape((3,self.numRows,self.numCols))
 			_frames.extend([(outframe/float(255))])
 		_frames = np.array(_frames);
 		return _frames;
@@ -118,7 +119,7 @@ class MSRProcessor(VideoProcessor):
 if __name__ == '__main__':
 	import argparse
 	parser = argparse.ArgumentParser(description='Testing MNIST dataset with model')
-	parser.add_argument("input",nargs='?',help = "input path of data",default="/home/abil/MSR2-action-data/Videos/10.avi");
+	parser.add_argument("input",nargs='?',help = "input path of data",default="/home/abil/MSR2-action-data/Videos/1.avi");
 	parser.add_argument("label",nargs='?',help = "input path of actual label",default="/home/abil/MSR2-action-data/Videos/groundtruth.txt");
 	parser.add_argument("labelmap",nargs='?',help = "label mappings",default="/home/abil/MSR2-action-data/Videos/label.txt");
 	parser.add_argument("model",nargs='?',help = "path of model config file",default="/home/abil/MSR2-action-data/final/CNN/model_conf.json");

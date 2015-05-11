@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import numpy as np
 import cv2
 import os
@@ -39,9 +40,10 @@ def getLabels(File,GroundTruthFile,framecount,nolabel=3):
 	for label in labels:
 		action = label['action']-1
 		for i in xrange(label['start'],(label['length']+label['start'])):
-			lbls[i].append(action);
+			lbls[i-1].append(action);
 	
 	lbls=[list([nolabel]) if len(labellist) == 0 else labellist for labellist in lbls]
+
 	return lbls
 
 
@@ -81,10 +83,12 @@ class MSRProcessor(VideoProcessor):
 			if not ret:
 				self.frameIdx = self.N;
 				return (None,-1);
+			print 'Testing ....................... [{0}%]\r'.format((self.frameIdx*100/self.N)),
 			self.frameIdx += 1;
 			return frame, self.lbls[self.frameIdx];
 		else:
 			return (None,-1)
+			print 'Testing ....................... [DONE]\r',
 		
 	def __process_block__(self,frames):
 		_frames = [];
@@ -119,14 +123,16 @@ class MSRProcessor(VideoProcessor):
 if __name__ == '__main__':
 	import argparse
 	parser = argparse.ArgumentParser(description='Testing MNIST dataset with model')
-	parser.add_argument("input",nargs='?',help = "input path of data",default="/home/abil/MSR2-action-data/Videos/1.avi");
-	parser.add_argument("label",nargs='?',help = "input path of actual label",default="/home/abil/MSR2-action-data/Videos/groundtruth.txt");
-	parser.add_argument("labelmap",nargs='?',help = "label mappings",default="/home/abil/MSR2-action-data/Videos/label.txt");
-	parser.add_argument("model",nargs='?',help = "path of model config file",default="/home/abil/MSR2-action-data/final/CNN/model_conf.json");
-	parser.add_argument("output",nargs='?',help = "save path",default="test.avi");
-	parser.add_argument("scale",nargs='?',help = "scale",default=0.5);
+	parser.add_argument("inputFile",help = "Path of video",);
+	parser.add_argument("groundtruthFile",help = "Path of groundtruthFile");
+	parser.add_argument("labelmap",help = "File with label mappings");
+	parser.add_argument("model",help = "path of model config file");
+	parser.add_argument('-o',"--output",help = "save path", dest="output",default="out.avi");
+	parser.add_argument('-s','--scale', action="store", dest="scale", type=float,default=0.5)
 	args = parser.parse_args();
-	vidProcessor = MSRProcessor(args.input,args.label,args.model,args.labelmap,args.output,args.scale);
+	#print args.inputFile,args.groundtruthFile,args.model,args.labelmap,args.output,args.scale
+	vidProcessor = MSRProcessor(args.inputFile,args.groundtruthFile,args.model,args.labelmap,args.output,args.scale);
 	vidProcessor.process();
+	print 'Testing ....................... [DONE]\n',
 	print 'Processing  [DONE]'
 	

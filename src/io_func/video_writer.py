@@ -15,4 +15,9 @@ class VideoWriter(object):
 		
 	def close(self):
 		self.vidout.release();
-		
+
+	def __del__(self):
+		try:
+			self.close();
+		except Exception:
+			pass

@@ -54,7 +54,7 @@ class VideoProcessor(object):
 		_indices = np.argsort(_score)[::-1];
 		col = 5; row = 10; steps = int(((self.height-30)/(top+1))-5);
 		for classLbl in _indices[:top]:
-			#print classLbl
+			#print classLbl,_labels
 			_str = "{0}".format(self.labels[classLbl]);
 			__draw_str__(baner_frame,(col,row),_str,color=self.colors[classLbl]); row += steps
 		#if not _labels is None:
